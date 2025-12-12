@@ -94,7 +94,22 @@ export async function onRequest(context) {
   const catalogs = catalogsWithMeta.map(item => item.name);
 
   // 3. 筛选当前分类的站点
-  const requestedCatalog = (catalog || '').trim();
+  let requestedCatalog = (catalog || '').trim();
+  
+  // Handle explicit request for "all" sites
+  const explicitAll = requestedCatalog.toLowerCase() === 'all';
+  if (explicitAll) {
+      requestedCatalog = '';
+  }
+
+  // If no specific catalog is requested AND not explicitly asking for 'all', try to use the default category from environment variables
+  if (!requestedCatalog && !explicitAll && env.DISPLAY_CATEGORY) {
+    const defaultCat = env.DISPLAY_CATEGORY.trim();
+    if (catalogs.includes(defaultCat)) {
+      requestedCatalog = defaultCat;
+    }
+  }
+
   const catalogExists = Boolean(requestedCatalog && catalogs.includes(requestedCatalog));
   const currentCatalog = catalogExists ? requestedCatalog : catalogs[0];
   const currentSites = catalogExists
